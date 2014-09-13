@@ -43,12 +43,6 @@ void foo()
     }
 }
 
-/* Функция обратного вызова для события: данные готовы для чтения в buf_ev */
-void echo_read_cb( bufferevent *buf_ev, void *arg )
-{
-
-}
-
 
 void echo_event_cb( bufferevent *buf_ev, short events, void *arg )
 {
@@ -88,7 +82,7 @@ void accept_connection_cb( evconnlistener *listener,
     timeout.tv_sec = 300;
 
     bufferevent_set_timeouts( buf_ev, &timeout, &timeout);
-    bufferevent_setcb( buf_ev, echo_read_cb, NULL, echo_event_cb, NULL );
+    bufferevent_setcb( buf_ev, NULL, NULL, echo_event_cb, NULL );
     bufferevent_enable( buf_ev, (EV_READ | EV_WRITE | EV_TIMEOUT) );
 }
 
