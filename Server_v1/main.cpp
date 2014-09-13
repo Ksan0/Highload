@@ -1,6 +1,7 @@
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
+#include <event2/thread.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <errno.h>
@@ -22,25 +23,32 @@ volatile bool loop_var = true;
 
 void foo()
 {
-//    evbuffer *buf_in = evbuffer_new();
+    evbuffer *buf_in = evbuffer_new();
     while(loop_var)
     {
         vec_mutex.lock();
         for(auto iter = vec.begin(); iter != vec.end(); iter++)
         {
-            //evbuffer
-            //bufferevent_read_buffer(*iter, buf_in);
-            //cout << "q = " << evbuffer_get_length(buf_in) << endl;
+            bufferevent_lock(*iter);
+            if ( !bufferevent_read_buffer(*iter, buf_in) )
+                cout << "q = " << evbuffer_get_length(buf_in) << endl;
 
             evbuffer *buf_input = bufferevent_get_input( *iter );
-            cout << "l = " << evbuffer_get_length(buf_input) << endl;
+            //cout << "l = " << evbuffer_get_length(buf_input) << endl;
             evbuffer *buf_output = bufferevent_get_output( *iter );
             evbuffer_add_buffer( buf_output, buf_input );
+            bufferevent_unlock(*iter);
         }
 
         vec_mutex.unlock();
         usleep(1000);
     }
+}
+
+/* Функция обратного вызова для события: данные готовы для чтения в buf_ev */
+void echo_read_cb( bufferevent *buf_ev, void *arg )
+{
+
 }
 
 
@@ -68,22 +76,30 @@ void accept_connection_cb( evconnlistener *listener,
         evutil_socket_t fd, sockaddr *addr, int sock_len,
         void *arg )
 {
+
+    cout << "GGFF" << endl;
+
     /* При обработке запроса нового соединения необходимо создать для него
        объект bufferevent */
     event_base *base = evconnlistener_get_base( listener );
-    bufferevent *buf_ev = bufferevent_socket_new( base, fd, BEV_OPT_CLOSE_ON_FREE );
+    bufferevent *buf_ev = bufferevent_socket_new( base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE );
+    if (!buf_ev) {
+        cout << "совсем плохо" << endl;
+    }
 
-    vec_mutex.lock();
-    vec.push_back(buf_ev);
-    vec_mutex.unlock();
 
     timeval timeout;
     timeout.tv_usec = 0;
     timeout.tv_sec = 300;
 
     bufferevent_set_timeouts( buf_ev, &timeout, &timeout);
-    bufferevent_setcb( buf_ev, NULL, NULL, echo_event_cb, NULL );
+    bufferevent_setcb( buf_ev, echo_read_cb, NULL, echo_event_cb, NULL );
     bufferevent_enable( buf_ev, (EV_READ | EV_WRITE | EV_TIMEOUT) );
+
+
+    vec_mutex.lock();
+    vec.push_back(buf_ev);
+    vec_mutex.unlock();
 }
 
 void accept_error_cb( evconnlistener *listener, void *arg )
@@ -97,6 +113,7 @@ void accept_error_cb( evconnlistener *listener, void *arg )
 
 int main( int argc, char **argv )
 {
+    evthread_use_pthreads();
     thread foo_thread(foo);
 
     event_base *base;

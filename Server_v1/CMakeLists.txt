@@ -12,12 +12,18 @@ set(SOURCE_FILES
 add_executable(${MY_PROJECT} ${SOURCE_FILES})
 
 # lib
-set(LIBEVENT event)
+set(LIBEVENT levent)
 add_library(${LIBEVENT} STATIC IMPORTED)
 set_property(TARGET ${LIBEVENT} PROPERTY
              IMPORTED_LOCATION /usr/local/lib/libevent.a)
 
+set(LIBEVENT_PTHREADS levent_pthreads)
+add_library(${LIBEVENT_PTHREADS} STATIC IMPORTED)
+set_property(TARGET ${LIBEVENT_PTHREADS} PROPERTY
+                          IMPORTED_LOCATION /usr/local/lib/libevent_pthreads.a)
+
 set(LIBRARIES
-                ${LIBEVENT})
+                ${LIBEVENT}
+                ${LIBEVENT_PTHREADS})
 
 target_link_libraries(${MY_PROJECT} ${LIBRARIES})
