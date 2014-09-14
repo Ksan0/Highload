@@ -2,18 +2,21 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/thread.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include <errno.h>
 
-
 // ???
+#include "WorkersPool.h"
+#include "Worker.h"
+#include "TaskItem.h"
+
 #include <unistd.h>
 #include <thread>
 #include <mutex>
 #include <vector>
 #include <iostream>
 #include <queue>
+#include <map>
 using namespace std;
 
 
@@ -23,24 +26,32 @@ volatile bool loop_var = true;
 
 void foo()
 {
-    evbuffer *buf_in = evbuffer_new();
+    char chbuf[1024*16];
     while(loop_var)
     {
         vec_mutex.lock();
-        for(auto iter = vec.begin(); iter != vec.end(); iter++)
-        {
+        for(auto iter = vec.begin(); iter != vec.end(); iter++) {
+            evbuffer *buf_in = evbuffer_new();
             bufferevent_lock(*iter);
-            if ( !bufferevent_read_buffer(*iter, buf_in) )
-                cout << "q = " << evbuffer_get_length(buf_in) << endl;
+            if (!bufferevent_read_buffer(*iter, buf_in)) {
 
-            evbuffer *buf_input = bufferevent_get_input( *iter );
-            //cout << "l = " << evbuffer_get_length(buf_input) << endl;
+                int readed = evbuffer_remove(buf_in, chbuf, sizeof(chbuf));
+                chbuf[readed] = 0;
+            }
+
+            //char response[] = "HTTP/1.0 200 OK\nContent-Type: text/html\nContent-Length: 3\nConnection: close\n\nfff";
+            //evbuffer_add(buf_in, response, sizeof(response));
+
+            //bufferevent_write_buffer(*iter, buf_in);
+
+            /*evbuffer *buf_input = bufferevent_get_input( *iter );
             evbuffer *buf_output = bufferevent_get_output( *iter );
-            evbuffer_add_buffer( buf_output, buf_input );
+            evbuffer_add_buffer( buf_output, buf_input );*/
             bufferevent_unlock(*iter);
+            evbuffer_free(buf_in);
         }
-
         vec_mutex.unlock();
+
         usleep(1000);
     }
 }
@@ -77,16 +88,10 @@ void accept_connection_cb( evconnlistener *listener,
         void *arg )
 {
 
-    cout << "GGFF" << endl;
-
     /* При обработке запроса нового соединения необходимо создать для него
        объект bufferevent */
     event_base *base = evconnlistener_get_base( listener );
     bufferevent *buf_ev = bufferevent_socket_new( base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE );
-    if (!buf_ev) {
-        cout << "совсем плохо" << endl;
-    }
-
 
     timeval timeout;
     timeout.tv_usec = 0;
@@ -116,6 +121,8 @@ int main( int argc, char **argv )
     evthread_use_pthreads();
     thread foo_thread(foo);
 
+    WorkersPool workersPool;
+
     event_base *base;
     evconnlistener *listener;
     sockaddr_in sin;
@@ -133,7 +140,7 @@ int main( int argc, char **argv )
     sin.sin_addr.s_addr = htonl( INADDR_ANY );  /* принимать запросы с любых адресов */
     sin.sin_port = htons( port );
 
-    listener = evconnlistener_new_bind( base, accept_connection_cb, NULL,
+    listener = evconnlistener_new_bind( base, accept_connection_cb, &workersPool,
             (LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE),
             -1, (sockaddr *)&sin, sizeof(sin) );
     if( !listener )

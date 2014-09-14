@@ -8,7 +8,10 @@ set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${MY_COMPILE_FLAGS}")
 
 # source
 set(SOURCE_FILES
-                    main.cpp)
+                    main.cpp
+                    TaskItem.cpp
+                    Worker.cpp
+                    WorkersPool.cpp)
 add_executable(${MY_PROJECT} ${SOURCE_FILES})
 
 # lib
