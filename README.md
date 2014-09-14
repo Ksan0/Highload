@@ -3,7 +3,7 @@ TODO:
 
 Worker::ExecTasks
 TaskItem::Exec
-main.cpp: 
+main.cpp:
 	using classes:
 		WorkersPool
 		Worker
