@@ -10,6 +10,7 @@ set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${MY_COMPILE_FLAGS}")
 set(SOURCE_FILES
                     main.cpp
                     TaskItem.cpp
+                    TaskItemExecuter.cpp
                     Worker.cpp
                     WorkersPool.cpp)
 add_executable(${MY_PROJECT} ${SOURCE_FILES})

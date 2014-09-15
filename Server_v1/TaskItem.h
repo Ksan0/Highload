@@ -1,7 +1,7 @@
 #ifndef TASK_ITEM_H
 #define TASK_ITEM_H
 
-#include "Worker.h"
+#include "TaskItemExecuter.h"
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <mutex>
@@ -13,6 +13,7 @@ class TaskItem
 {
 public:
     TaskItem(bufferevent *bufEv);
+    ~TaskItem();
 
     bufferevent* GetBufferEvent();
 
@@ -26,6 +27,11 @@ private:
 
     bufferevent *_bufEv;
     Worker *_worker;
+
+    evbuffer *_readBuf;
+    evbuffer *_writeBuf;
+
+    TaskItemExecuter _executer;
 };
 
 #endif
