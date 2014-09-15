@@ -4,6 +4,7 @@
 #include "TaskItem.h"
 #include "Worker.h"
 #include <vector>
+#include <map>
 #include <mutex>
 #include <algorithm>
 using namespace std;
@@ -16,21 +17,26 @@ public:
     enum Error
     {
         None,
-        NoWorkers
+        NoWorkers,
+        NoTask
     };
 
     WorkersPool();
     ~WorkersPool();
 
     Worker* CreateWorker();
-    bool DestroyWorker(Worker *worker);
+    bool EraseWorker(Worker *worker);
+    static void DestroyWorker(Worker *worker);
 
     Error AddTask(TaskItem *task);
+    Error RemoveTask(bufferevent *bufEv);
 private:
 
     mutex _workersMutex;
     vector<Worker*> _workers;
 
+    mutex _allTasksMutex;
+    map<bufferevent*, TaskItem*> _allTasks;
 };
 
 

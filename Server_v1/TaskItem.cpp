@@ -1,23 +1,31 @@
 #include "TaskItem.h"
 
+#include <iostream>
 
-TaskItem::TaskItem(bufferevent *buf_ev)
+TaskItem::TaskItem(bufferevent *bufEv)
 {
-    _buf_ev = buf_ev;
+    _bufEv = bufEv;
+    _worker = nullptr;
 }
 
 
-void TaskItem::Read(evbuffer *data)
+bufferevent* TaskItem::GetBufferEvent()
 {
-    bufferevent_lock(_buf_ev);
-    bufferevent_read_buffer(_buf_ev, data);
-    bufferevent_unlock(_buf_ev);
+    return _bufEv;
 }
 
 
-void TaskItem::Write(evbuffer *data)
+void TaskItem::SetWorker(Worker *worker)
 {
-    bufferevent_lock(_buf_ev);
-    bufferevent_write_buffer(_buf_ev, data);
-    bufferevent_unlock(_buf_ev);
+    _worker = worker;
+}
+
+Worker* TaskItem::GetWorker()
+{
+    return _worker;
+}
+
+void TaskItem::Execute()
+{
+    std::cout << "EXE ME!" << std::endl;
 }

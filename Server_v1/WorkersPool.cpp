@@ -11,7 +11,7 @@ WorkersPool::~WorkersPool()
     _workersMutex.lock();
     for (auto iter = _workers.begin(); iter != _workers.end(); iter++)
     {
-        delete (*iter);
+        (*iter)->ExitThread();
     }
     _workers.clear();
     _workersMutex.unlock();
@@ -28,7 +28,7 @@ Worker* WorkersPool::CreateWorker()
 }
 
 
-bool WorkersPool::DestroyWorker(Worker *worker)
+bool WorkersPool::EraseWorker(Worker *worker)
 {
     _workersMutex.lock();
     auto iter = find(_workers.begin(), _workers.end(), worker);
@@ -36,7 +36,7 @@ bool WorkersPool::DestroyWorker(Worker *worker)
     {
         _workers.erase(iter);
         _workersMutex.unlock();
-        delete worker;
+        worker->ExitThread();
         return true;
     }
     _workersMutex.unlock();
@@ -53,22 +53,49 @@ WorkersPool::Error WorkersPool::AddTask(TaskItem *task)
         return Error::NoWorkers;
     }
 
-    int minCycleTimeMSIndex = 0;
-    int minCycleTimeMS = _workers[0]->GetLastCycleTime();
-    int tmpCycleTimeMS;
+    int minExecuteTimeMSIndex = 0;
+    int minExecuteTimeMS = _workers[0]->GetLastExecuteTime();
+    int tmpExecuteTimeMS;
     for (int i  = 1; i < _workers.size(); ++i)
     {
-        tmpCycleTimeMS = _workers[i]->GetLastCycleTime();
-        if (tmpCycleTimeMS < minCycleTimeMS)
+        tmpExecuteTimeMS = _workers[i]->GetLastExecuteTime();
+        if (tmpExecuteTimeMS < minExecuteTimeMS)
         {
-            minCycleTimeMS = tmpCycleTimeMS;
-            minCycleTimeMSIndex = i;
+            minExecuteTimeMS = tmpExecuteTimeMS;
+            minExecuteTimeMSIndex = i;
         }
     }
 
-    _workers[minCycleTimeMSIndex]->AddTask(task);
+    task->SetWorker(_workers[minExecuteTimeMSIndex]);
+    _workers[minExecuteTimeMSIndex]->AddTask(task);
 
     _workersMutex.unlock();
 
+    _allTasksMutex.lock();
+    _allTasks.insert(pair<bufferevent*, TaskItem*>(task->GetBufferEvent(), task));
+    _allTasksMutex.unlock();
+
     return Error::None;
+}
+
+WorkersPool::Error WorkersPool::RemoveTask(bufferevent *bufEv)
+{
+    _allTasksMutex.lock();
+    auto iter = _allTasks.find(bufEv);
+    if (iter != _allTasks.end())
+    {
+        TaskItem *item = iter->second;
+        Worker *worker = item->GetWorker();
+        if (worker != nullptr)
+        {
+            worker->RemoveTask(item);
+        }
+        _allTasks.erase(iter);
+    }
+    _allTasksMutex.unlock();
+}
+
+void WorkersPool::DestroyWorker(Worker *worker)
+{
+    delete worker;
 }
