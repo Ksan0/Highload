@@ -1,2 +1,3 @@
 *.layout
-Server_v1/.idea/*
+/Server_v1/.idea/*
+Server_v1/.idea/workspace.xml
