@@ -1,8 +1,8 @@
 #include "ServerConfig.h"
 
-ServerConfig ServerConfig::*__instance = nullptr;
+ServerConfig *ServerConfig::__instance = nullptr;
 
-ServerConfig* GetInstance()
+ServerConfig* ServerConfig::GetInstance()
 {
     if (__instance == nullptr)
     {

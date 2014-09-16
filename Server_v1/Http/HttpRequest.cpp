@@ -3,6 +3,7 @@
 #include <string.h>
 #include <vector>
 #include <iostream>
+#include <unistd.h>
 
 static void __SplitLine(char *line, const char *delim, vector<char*> &out_args)
 {
@@ -33,16 +34,20 @@ bool HttpRequest::IsReadyToProcess()
 
 void HttpRequest::Process(HttpResponse &response)
 {
+    string fileName = _uri;
     if (_uri == "/")
     {
-        response.SetFilePath("index.html");
-        return;
+        fileName = "/index.html";
     }
+    string path = ServerConfig::GetInstance()->GetDocumentRoot() + fileName;
 
-    string path = ServerConfig::GetInstance()->GetDocumentRoot();
-    path += _uri;
-
-
+    if (access(path.data(), R_OK) != -1)
+    {
+        response.SetFilePath(path);
+        response.SetCode(200);
+    } else {
+        response.SetCode(404);
+    }
 }
 
 
@@ -59,13 +64,19 @@ void HttpRequest::AddLine(char *line, size_t len, HttpResponse &response)
         {
             _AddLineHeaders(line, len, response);
         } else {
-            _parseStatus = ParseStatus::Headers;
+            HeadersEnd();
         }
         break;
     case ParseStatus::MessageBody:
         // isn't support in current version of server
         break;
     }
+}
+
+
+void HttpRequest::HeadersEnd()
+{
+    _parseStatus = ParseStatus::MessageBody;
 }
 
 

@@ -1,7 +1,7 @@
 #include "HttpResponse.h"
 #include <sstream>
 #include <iomanip>
-
+#include <sys/stat.h>
 
 
 map<int, const char*> __InitCodeToMsg()
@@ -49,6 +49,11 @@ const char* HttpResponse::GetCodeMsg()
 }
 
 
+void HttpResponse::SetFilePath(const string &path)
+{
+    _filePath = path;
+}
+
 void HttpResponse::WriteToBuffer(evbuffer *buf)
 {
     time_t rawTime = time(NULL);
@@ -62,23 +67,40 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
-    /*sprintf(result, ,
-            wday_name[timeptr->tm_wday],
-            timeptr->tm_mday,
-            mon_name[timeptr->tm_mon],
-            1900 + timeptr->tm_year,
-            timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);*/
-
     evbuffer_add_printf(buf,
 
                         "HTTP/%.1f %d %s\n"
                         "Date: %.3s,%3d %.3s %d %.2d:%.2d:%.2d GMT\n"
                         "Server: Ksan.Server.v0.01\n"
-                        "Connection: close\n"
-                        "\n",
+                        "Connection: close\n",
 
                         GetVersion(), GetCode(), GetCodeMsg(),
                         wday_name[timeptr->tm_wday], timeptr->tm_mday, mon_name[timeptr->tm_mon], 1900 + timeptr->tm_year, timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec
 
+    );
+
+    if (GetCode() == 200)
+    {
+        FILE *file = fopen(_filePath.data(), "r");
+
+        if (file)
+        {
+            struct stat fileStat;
+            stat(_filePath.data(), &fileStat);
+            int fd = fileno(file);
+
+            evbuffer_add_printf(buf,
+
+                                "Content-Type: text/html; charset=utf8\n"
+                                "Content-Length: %ld\n"
+                                "\n",
+
+                                fileStat.st_size
             );
+
+            evbuffer_add_file(buf, fd, 0, fileStat.st_size);
+        }
+    } else {
+        evbuffer_add_printf(buf, "\n");
+    }
 }

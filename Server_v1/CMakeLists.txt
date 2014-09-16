@@ -12,6 +12,7 @@ set(SOURCE_FILES
                     Http/HttpRR.cpp
                     Http/HttpRequest.cpp
                     Http/HttpResponse.cpp
+                    Server/ServerConfig.cpp
                     Server/TaskItem.cpp
                     Server/TaskItemExecuter.cpp
                     Server/Worker.cpp

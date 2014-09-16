@@ -1,11 +1,13 @@
 #ifndef HTTP_REQUEST_H
 #define HTTP_REQUEST_H
 
+
+#include "../Server/ServerConfig.h"
 #include "HttpRR.h"
 #include "HttpResponse.h"
-#include "../Server/ServerConfig.h"
 #include <string>
 using namespace std;
+
 
 class HttpRequest : protected HttpRR
 {
@@ -20,6 +22,7 @@ public:
     HttpRequest();
 
     void AddLine(char *line, size_t len, HttpResponse &response);
+    void HeadersEnd();
 
     bool IsReadyToProcess();
     void Process(HttpResponse &response);

@@ -12,7 +12,7 @@ void TaskItemExecuter::Execute(evbuffer *readBuf, evbuffer *writeBuf)
     if (evbuffer_get_length(readBuf) <= 0)
         return;
 
-    size_t lineLength;
+    size_t lineLength = 1;
     while(evbuffer_get_length(readBuf) > 0)
     {
         char *requestLine = evbuffer_readln(readBuf, &lineLength, evbuffer_eol_style::EVBUFFER_EOL_ANY);
@@ -21,10 +21,11 @@ void TaskItemExecuter::Execute(evbuffer *readBuf, evbuffer *writeBuf)
 
         delete requestLine;
     }
+    _request.HeadersEnd();
 
     if (_request.IsReadyToProcess())
     {
-
+        _request.Process(_response);
     }
 
     if (_response.IsCodeDefined())
