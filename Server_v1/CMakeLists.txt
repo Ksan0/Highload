@@ -9,10 +9,13 @@ set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${MY_COMPILE_FLAGS}")
 # source
 set(SOURCE_FILES
                     main.cpp
-                    TaskItem.cpp
-                    TaskItemExecuter.cpp
-                    Worker.cpp
-                    WorkersPool.cpp)
+                    Http/HttpRR.cpp
+                    Http/HttpRequest.cpp
+                    Http/HttpResponse.cpp
+                    Server/TaskItem.cpp
+                    Server/TaskItemExecuter.cpp
+                    Server/Worker.cpp
+                    Server/WorkersPool.cpp)
 add_executable(${MY_PROJECT} ${SOURCE_FILES})
 
 # lib

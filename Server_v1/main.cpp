@@ -6,9 +6,11 @@
 #include <errno.h>
 
 // ???
-#include "WorkersPool.h"
-#include "Worker.h"
-#include "TaskItem.h"
+#include "Http/HttpRequest.h"
+#include "Http/HttpResponse.h"
+#include "Server/TaskItem.h"
+#include "Server/Worker.h"
+#include "Server/WorkersPool.h"
 
 #include <unistd.h>
 #include <thread>
@@ -34,39 +36,6 @@ void WorkerThread(WorkersPool *workersPool)
 
     WorkersPool::DestroyWorker(worker);
 }
-
-
-/*void foo()
-{
-    char chbuf[1024*16];
-    while(loop_var)
-    {
-        vec_mutex.lock();
-        for(auto iter = vec.begin(); iter != vec.end(); iter++) {
-            evbuffer *buf_in = evbuffer_new();
-            bufferevent_lock(*iter);
-            if (!bufferevent_read_buffer(*iter, buf_in)) {
-
-                int readed = evbuffer_remove(buf_in, chbuf, sizeof(chbuf));
-                chbuf[readed] = 0;
-            }
-
-            //char response[] = "HTTP/1.0 200 OK\nContent-Type: text/html\nContent-Length: 3\nConnection: close\n\nfff";
-            //evbuffer_add(buf_in, response, sizeof(response));
-
-            //bufferevent_write_buffer(*iter, buf_in);
-
-            /*evbuffer *buf_input = bufferevent_get_input( *iter );
-            evbuffer *buf_output = bufferevent_get_output( *iter );
-            evbuffer_add_buffer( buf_output, buf_input ); /
-            bufferevent_unlock(*iter);
-            evbuffer_free(buf_in);
-        }
-        vec_mutex.unlock();
-
-        usleep(1000);
-    }
-}*/
 
 
 void echo_event_cb( bufferevent *buf_ev, short events, void *arg )

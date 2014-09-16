@@ -17,6 +17,9 @@ TaskItem::TaskItem(bufferevent *bufEv)
 TaskItem::~TaskItem()
 {
     bufferevent_free(_bufEv);
+
+    evbuffer_free(_readBuf);
+    evbuffer_free(_writeBuf);
 }
 
 
