@@ -109,7 +109,8 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
             contentTypeString = contentTypePair->second;
         }
 
-        FILE *file = fopen(_filePath.data(), "r");
+        FILE *file = fopen(_filePath.data(), "rb");
+
         if (file)
         {
             struct stat fileStat;
@@ -128,7 +129,10 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
 
             if (GetMethod() != RequestMethod::Head)
             {
-                evbuffer_add_file(buf, fd, 0, fileStat.st_size);
+                if (evbuffer_add_file(buf, fd, 0, fileStat.st_size) == -1)
+                {
+                    fclose(file);
+                }
             }
         }
     } else {

@@ -39,6 +39,10 @@ void WorkerThread(WorkersPool *workersPool)
 
 void write_event_cb(bufferevent *buf_ev, void *arg)
 {
+    auto len = evbuffer_get_length(bufferevent_get_output(buf_ev));
+
+    if (len > 0)
+        cout << "l " << len << endl;
     ((WorkersPool*)arg)->RemoveTask(buf_ev, false);
 }
 

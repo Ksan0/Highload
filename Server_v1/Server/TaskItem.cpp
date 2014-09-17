@@ -60,12 +60,12 @@ void TaskItem::Execute()
     bool finishFlag;
     _executer.Execute(_readBuf, _writeBuf, &finishFlag);
 
+    bufferevent_lock(_bufEv);
+    bufferevent_write_buffer(_bufEv, _writeBuf);
+    bufferevent_unlock(_bufEv);
+
     if (finishFlag)
     {
         _finishFlag = finishFlag;
     }
-
-    bufferevent_lock(_bufEv);
-    bufferevent_write_buffer(_bufEv, _writeBuf);
-    bufferevent_unlock(_bufEv);
 }

@@ -140,9 +140,11 @@ void HttpRequest::_AddLineStartingLine(char *line, size_t len, HttpResponse &res
         if (strcmp(args[0], "HEAD") == 0)
         {
             _requestMethod = RequestMethod::Head;
-        } else if (strcmp(args[0], "GET"))
+        } else if (strcmp(args[0], "GET") == 0)
         {
             _requestMethod = RequestMethod::Get;
+        } else {
+            response.SetCode(405);
         }
         response.SetMethod(_requestMethod);
     }
