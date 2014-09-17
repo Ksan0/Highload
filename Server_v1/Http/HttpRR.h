@@ -28,12 +28,17 @@ public:
 
     void SetUri(const string &uri);
     string GetUri();
+
+    string GetPage();
 protected:
 
     RequestMethod _requestMethod;
     map<string, string> _headers;
-    string _uri;
     float _version;
+
+private:
+
+    string _uri;
 
 };
 

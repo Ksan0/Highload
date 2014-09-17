@@ -17,14 +17,14 @@ map<int, const char*> __InitCodeToMsg()
 map<string, const char*> __InitExtensionToContentType()
 {
     map<string, const char*> dict;
-    dict.insert(pair<string, const char*>("html", "text/html; charset=UTF-8"));
-    dict.insert(pair<string, const char*>("css", "text/css; charset=UTF-8"));
-    dict.insert(pair<string, const char*>("js", "text/javascript; charset=UTF-8"));
+    dict.insert(pair<string, const char*>("html", "text/html"));
+    dict.insert(pair<string, const char*>("css", "text/css"));
+    dict.insert(pair<string, const char*>("js", "text/javascript"));
     dict.insert(pair<string, const char*>("jpg", "image/jpeg"));
     dict.insert(pair<string, const char*>("jpeg", "image/jpeg"));
     dict.insert(pair<string, const char*>("png", "image/png"));
     dict.insert(pair<string, const char*>("gif", "image/gif"));
-    dict.insert(pair<string, const char*>("swf", "text/swf"));
+    dict.insert(pair<string, const char*>("swf", "application/x-shockwave-flash"));
     return dict;
 }
 
@@ -90,10 +90,10 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
 
     evbuffer_add_printf(buf,
 
-                        "HTTP/%.1f %d %s\n"
-                        "Date: %.3s,%3d %.3s %d %.2d:%.2d:%.2d GMT\n"
-                        "Server: Ksan.Server.v0.01\n"
-                        "Connection: close\n",
+                        "HTTP/%.1f %d %s\r\n"
+                        "Date: %.3s,%3d %.3s %d %.2d:%.2d:%.2d GMT\r\n"
+                        "Server: Ksan.Server.v0.01\r\n"
+                        "Connection: close\r\n",
 
                         GetVersion(), GetCode(), GetCodeMsg(),
                         wday_name[timeptr->tm_wday], timeptr->tm_mday, mon_name[timeptr->tm_mon], 1900 + timeptr->tm_year, timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec
@@ -118,9 +118,9 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
 
             evbuffer_add_printf(buf,
 
-                                "Content-Type: %s\n"
-                                "Content-Length: %ld\n"
-                                "\n",
+                                "Content-Type: %s\r\n"
+                                "Content-Length: %ld\r\n"
+                                "\r\n",
 
                                 contentTypeString.data(),
                                 fileStat.st_size

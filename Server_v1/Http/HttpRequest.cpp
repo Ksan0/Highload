@@ -56,10 +56,10 @@ bool HttpRequest::IsReadyToProcess()
 
 void HttpRequest::Process(HttpResponse &response)
 {
-    string fileName = _uri;
-    if (_uri == "/")
+    string fileName = GetPage();
+    if (fileName.length() > 1 && fileName.back() == '/')
     {
-        fileName = "/index.html";
+        fileName += "index.html";
     }
     fileName = __UrlDecode(fileName);
 
@@ -149,7 +149,7 @@ void HttpRequest::_AddLineStartingLine(char *line, size_t len, HttpResponse &res
 
     if (args.size() >= 2)
     {
-        _uri = args[1];
+        SetUri(args[1]);
     }
 
     if (args.size() >= 3)

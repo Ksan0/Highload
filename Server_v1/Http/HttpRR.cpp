@@ -58,3 +58,10 @@ string HttpRR::GetUri()
 {
     return _uri;
 }
+
+
+string HttpRR::GetPage()
+{
+    auto pos = _uri.find('?');
+    return _uri.substr(0, pos);
+}
