@@ -15,7 +15,7 @@ string __UrlDecode(const string &src)
     for (i = 0; i < src.length(); ++i) {
         if (src[i] == 37)
         {
-            sscanf(src.substr(i + 1, 2).c_str(), "%x", &ii);
+            sscanf(src.data() + i + 1, "%x", &ii);
             ch = (char)ii;
             ret += ch;
             i = i + 2;
