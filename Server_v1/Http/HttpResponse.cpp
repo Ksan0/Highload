@@ -73,6 +73,8 @@ void HttpResponse::SetFilePath(const string &path, const string &extension)
 
 #include <iostream>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 void HttpResponse::WriteToBuffer(evbuffer *buf)
 {
@@ -109,30 +111,31 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
             contentTypeString = contentTypePair->second;
         }
 
-        FILE *file = fopen(_filePath.data(), "rb");
+        int fd = open(_filePath.data(), O_RDONLY);
 
-        if (file)
+        if (fd != -1)
         {
             struct stat fileStat;
-            stat(_filePath.data(), &fileStat);
-            int fd = fileno(file);
+            if (fstat(fd, &fileStat) == 0)
+            {
+                evbuffer_add_printf(buf,
 
-            evbuffer_add_printf(buf,
-
-                                "Content-Type: %s\r\n"
+                        "Content-Type: %s\r\n"
                                 "Content-Length: %ld\r\n"
                                 "\r\n",
 
-                                contentTypeString.data(),
-                                fileStat.st_size
-            );
+                        contentTypeString.data(),
+                        fileStat.st_size
+                );
 
-            if (GetMethod() != RequestMethod::Head)
-            {
-                if (evbuffer_add_file(buf, fd, 0, fileStat.st_size) == -1)
-                {
-                    fclose(file);
+                if (GetMethod() != RequestMethod::Head) {
+
+                    if (evbuffer_add_file(buf, fd, 0, fileStat.st_size) == -1) {
+                        close(fd);
+                    }
                 }
+            } else {
+                close(fd);
             }
         }
     } else {
