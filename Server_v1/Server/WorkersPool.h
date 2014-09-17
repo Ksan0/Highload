@@ -29,7 +29,7 @@ public:
     static void DestroyWorker(Worker *worker);
 
     Error AddTask(TaskItem *task);
-    Error RemoveTask(bufferevent *bufEv);
+    Error RemoveTask(bufferevent *bufEv, bool force);
 private:
 
     mutex _workersMutex;

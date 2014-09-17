@@ -77,14 +77,27 @@ void HttpRequest::Process(HttpResponse &response)
     reverse(extension.begin(), extension.end());
 
     string path = ServerConfig::GetInstance()->GetDocumentRoot() + fileName;
+    char *realPath = realpath(path.data(), nullptr);
 
-    if (access(path.data(), R_OK) != -1)
+    if (realPath)
     {
-        response.SetFilePath(path, extension);
-        response.SetCode(200);
+        string strRealPath = realPath;
+
+        bool insideDocRoot = strRealPath.find(ServerConfig::GetInstance()->GetDocumentRoot()) != string::npos;
+        bool haveAccess = access(realPath, R_OK) != -1;
+        if (insideDocRoot && haveAccess)
+        {
+            response.SetFilePath(path, extension);
+            response.SetCode(200);
+        } else {
+            response.SetCode(404);
+        }
+
+        free(realPath);
     } else {
         response.SetCode(404);
     }
+
 }
 
 
@@ -131,6 +144,7 @@ void HttpRequest::_AddLineStartingLine(char *line, size_t len, HttpResponse &res
         {
             _requestMethod = RequestMethod::Get;
         }
+        response.SetMethod(_requestMethod);
     }
 
     if (args.size() >= 2)

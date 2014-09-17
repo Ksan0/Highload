@@ -78,19 +78,22 @@ WorkersPool::Error WorkersPool::AddTask(TaskItem *task)
     return Error::None;
 }
 
-WorkersPool::Error WorkersPool::RemoveTask(bufferevent *bufEv)
+WorkersPool::Error WorkersPool::RemoveTask(bufferevent *bufEv, bool force)
 {
     _allTasksMutex.lock();
     auto iter = _allTasks.find(bufEv);
     if (iter != _allTasks.end())
     {
         TaskItem *item = iter->second;
-        Worker *worker = item->GetWorker();
-        if (worker != nullptr)
+        if (force || item->GetFinishFlag())
         {
-            worker->RemoveTask(item);
+            Worker *worker = item->GetWorker();
+            if (worker != nullptr)
+            {
+                worker->RemoveTask(item);
+            }
+            _allTasks.erase(iter);
         }
-        _allTasks.erase(iter);
     }
     _allTasksMutex.unlock();
 }

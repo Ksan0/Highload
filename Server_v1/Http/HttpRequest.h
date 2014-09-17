@@ -12,13 +12,6 @@ using namespace std;
 class HttpRequest : protected HttpRR
 {
 public:
-    enum RequestMethod
-    {
-        None,
-        Head,
-        Get
-    };
-
     HttpRequest();
 
     void AddLine(char *line, size_t len, HttpResponse &response);
@@ -39,8 +32,6 @@ private:
     };
 
     ParseStatus _parseStatus;
-
-    RequestMethod _requestMethod;
 };
 
 

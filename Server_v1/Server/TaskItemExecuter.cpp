@@ -1,8 +1,11 @@
+#include <iostream>
 #include "TaskItemExecuter.h"
 
 
-void TaskItemExecuter::Execute(evbuffer *readBuf, evbuffer *writeBuf)
+void TaskItemExecuter::Execute(evbuffer *readBuf, evbuffer *writeBuf, bool *finishFlag)
 {
+    *finishFlag = false;
+
     if (evbuffer_get_length(readBuf) <= 0)
         return;
 
@@ -24,5 +27,6 @@ void TaskItemExecuter::Execute(evbuffer *readBuf, evbuffer *writeBuf)
     if (_response.IsCodeDefined())
     {
         _response.WriteToBuffer(writeBuf);
+        *finishFlag = true;
     }
 }

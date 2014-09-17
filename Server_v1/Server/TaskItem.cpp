@@ -1,6 +1,9 @@
 #include "TaskItem.h"
 
 #include <iostream>
+#include <event2/event.h>
+#include <unistd.h>
+
 using namespace std;
 
 
@@ -11,6 +14,8 @@ TaskItem::TaskItem(bufferevent *bufEv)
 
     _readBuf = evbuffer_new();
     _writeBuf = evbuffer_new();
+
+    _finishFlag = false;
 }
 
 
@@ -39,13 +44,26 @@ Worker* TaskItem::GetWorker()
     return _worker;
 }
 
+
+bool TaskItem::GetFinishFlag()
+{
+    return _finishFlag;
+}
+
+
 void TaskItem::Execute()
 {
     bufferevent_lock(_bufEv);
     bufferevent_read_buffer(_bufEv, _readBuf);
     bufferevent_unlock(_bufEv);
 
-    _executer.Execute(_readBuf, _writeBuf);
+    bool finishFlag;
+    _executer.Execute(_readBuf, _writeBuf, &finishFlag);
+
+    if (finishFlag)
+    {
+        _finishFlag = finishFlag;
+    }
 
     bufferevent_lock(_bufEv);
     bufferevent_write_buffer(_bufEv, _writeBuf);

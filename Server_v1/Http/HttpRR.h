@@ -8,7 +8,17 @@ using namespace std;
 class HttpRR
 {
 public:
+    enum RequestMethod
+    {
+        None,
+        Head,
+        Get
+    };
+
     HttpRR();
+
+    void SetMethod(RequestMethod m);
+    RequestMethod GetMethod();
 
     void SetHeader(const string &key, const string &value);
     bool GetHeader(const string &key, string &value);
@@ -19,9 +29,12 @@ public:
     void SetUri(const string &uri);
     string GetUri();
 protected:
+
+    RequestMethod _requestMethod;
     map<string, string> _headers;
     string _uri;
     float _version;
+
 };
 
 

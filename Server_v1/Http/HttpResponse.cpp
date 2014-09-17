@@ -72,6 +72,8 @@ void HttpResponse::SetFilePath(const string &path, const string &extension)
 }
 
 #include <iostream>
+#include <string.h>
+
 void HttpResponse::WriteToBuffer(evbuffer *buf)
 {
     time_t rawTime = time(NULL);
@@ -124,9 +126,32 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
                                 fileStat.st_size
             );
 
-            evbuffer_add_file(buf, fd, 0, fileStat.st_size);
+            if (GetMethod() != RequestMethod::Head)
+            {
+                evbuffer_add_file(buf, fd, 0, fileStat.st_size);
+            }
         }
     } else {
-        evbuffer_add_printf(buf, "\n");
+        const char *errMsg = GetCodeMsg();
+
+        evbuffer_add_printf(buf,
+
+                            "Content-Type: text/plain\n"
+                            "Content-Length: %zi\n"
+                            "\n",
+
+                            strlen(errMsg)
+        );
+
+        if (_requestMethod != RequestMethod::Head)
+        {
+            evbuffer_add_printf(buf,
+
+                                "Error %d: %s",
+
+                                GetCode(), errMsg
+            );
+        }
     }
+
 }

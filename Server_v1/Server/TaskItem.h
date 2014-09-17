@@ -20,6 +20,8 @@ public:
     void SetWorker(Worker *worker);
     Worker* GetWorker();
 
+    bool GetFinishFlag();
+
     void Execute();
 private:
     TaskItem();
@@ -30,6 +32,8 @@ private:
 
     evbuffer *_readBuf;
     evbuffer *_writeBuf;
+
+    bool _finishFlag;
 
     TaskItemExecuter _executer;
 };

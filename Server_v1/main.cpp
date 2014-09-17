@@ -37,12 +37,17 @@ void WorkerThread(WorkersPool *workersPool)
     WorkersPool::DestroyWorker(worker);
 }
 
+void write_event_cb(bufferevent *buf_ev, void *arg)
+{
+    ((WorkersPool*)arg)->RemoveTask(buf_ev, false);
+}
+
 
 void echo_event_cb( bufferevent *buf_ev, short events, void *arg )
 {
     if (events & (BEV_EVENT_EOF | BEV_EVENT_TIMEOUT | BEV_EVENT_ERROR))
     {
-        ((WorkersPool*)arg)->RemoveTask(buf_ev);
+        ((WorkersPool*)arg)->RemoveTask(buf_ev, true);
     }
 }
 
@@ -56,11 +61,11 @@ void accept_connection_cb( evconnlistener *listener,
 
     timeval timeout;
     timeout.tv_usec = 0;
-    timeout.tv_sec = 300;
+    timeout.tv_sec = 30;
 
     bufferevent_set_timeouts( buf_ev, &timeout, &timeout);
-    bufferevent_setcb( buf_ev, NULL, NULL, echo_event_cb, arg );
-    bufferevent_enable( buf_ev, (EV_READ | EV_WRITE | EV_TIMEOUT) );
+    bufferevent_setcb( buf_ev, NULL, write_event_cb, echo_event_cb, arg );
+    bufferevent_enable( buf_ev, (EV_READ | EV_WRITE) );
 
     ((WorkersPool*)arg)->AddTask(new TaskItem(buf_ev));
 }
@@ -81,13 +86,11 @@ int main( int argc, char **argv )
     evthread_use_pthreads();
 
     WorkersPool *workersPool;
-    int threadsCount = 4;
     vector<thread*> threads;
 
     event_base *base;
     evconnlistener *listener;
     sockaddr_in sin;
-    unsigned short port = 9876;
 
     base = event_base_new();
     if( !base )
@@ -99,7 +102,7 @@ int main( int argc, char **argv )
     memset( &sin, 0, sizeof(sin) );
     sin.sin_family = AF_INET;    /* работа с доменом IP-адресов */
     sin.sin_addr.s_addr = htonl( INADDR_ANY );  /* принимать запросы с любых адресов */
-    sin.sin_port = htons( port );
+    sin.sin_port = htons( ServerConfig::GetInstance()->GetListenPort());
 
     workersPool = new WorkersPool;
     listener = evconnlistener_new_bind( base, accept_connection_cb, workersPool,
@@ -107,13 +110,14 @@ int main( int argc, char **argv )
             -1, (sockaddr *)&sin, sizeof(sin) );
     if( !listener )
     {
-        cerr << "Ошибка при создании объекта evconnlistener" << endl;
+        cerr    << "Ошибка при создании объекта evconnlistener (port="
+                << ServerConfig::GetInstance()->GetListenPort() << ")" << endl;
         delete workersPool;
         return -1;
     }
     evconnlistener_set_error_cb( listener, accept_error_cb );
 
-    for (int i = 0; i < threadsCount; ++i)
+    for (int i = 0; i < ServerConfig::GetInstance()->GetThreadsCount(); ++i)
     {
         thread *newThread = new thread(WorkerThread, workersPool);
         threads.push_back(newThread);

@@ -9,7 +9,7 @@
 class TaskItemExecuter
 {
 public:
-    void Execute(evbuffer *readBuf, evbuffer *writeBuf);
+    void Execute(evbuffer *readBuf, evbuffer *writeBuf, bool *finishFlag    );
 private:
     HttpRequest _request;
     HttpResponse _response;

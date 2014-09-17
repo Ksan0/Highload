@@ -9,6 +9,8 @@ class ServerConfig
 public:
     static ServerConfig* GetInstance();
 
+    int GetThreadsCount();
+    unsigned short GetListenPort();
     string GetDocumentRoot();
 private:
     ServerConfig();
@@ -17,6 +19,8 @@ private:
 
     static ServerConfig *__instance;
 
+    int _threadsCount;
+    unsigned short _listenPort;
     string _documentRoot;
 };
 

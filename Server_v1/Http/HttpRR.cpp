@@ -6,6 +6,18 @@ HttpRR::HttpRR()
 }
 
 
+void HttpRR::SetMethod(RequestMethod m)
+{
+    _requestMethod = m;
+}
+
+
+HttpRR::RequestMethod HttpRR::GetMethod()
+{
+    return _requestMethod;
+}
+
+
 void HttpRR::SetHeader(const string &key, const string &value)
 {
     _headers.insert(pair<string, string>(key, value));

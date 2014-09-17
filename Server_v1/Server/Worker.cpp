@@ -1,6 +1,7 @@
 #include "Worker.h"
 
 #include <time.h>
+#include <iostream>
 
 Worker::Worker()
 {
@@ -47,6 +48,7 @@ void Worker::UpdateTasks()
             auto iter = find(_tasks.begin(), _tasks.end(), taskItemAction->item);
             if (iter != _tasks.end())
             {
+                delete (*iter);
                 _tasks.erase(iter);
             }
             break;
