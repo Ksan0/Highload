@@ -2,8 +2,30 @@
 
 #include <string.h>
 #include <vector>
-#include <iostream>
 #include <unistd.h>
+#include <algorithm>
+#include <iostream>
+
+
+string __UrlDecode(const string &src)
+{
+    string ret;
+    char ch;
+    int i, ii;
+    for (i = 0; i < src.length(); ++i) {
+        if (src[i] == 37)
+        {
+            sscanf(src.substr(i + 1, 2).c_str(), "%x", &ii);
+            ch = (char)ii;
+            ret += ch;
+            i = i + 2;
+        } else {
+            ret += src[i];
+        }
+    }
+    return ret;
+}
+
 
 static void __SplitLine(char *line, const char *delim, vector<char*> &out_args)
 {
@@ -39,11 +61,26 @@ void HttpRequest::Process(HttpResponse &response)
     {
         fileName = "/index.html";
     }
+    fileName = __UrlDecode(fileName);
+
+    string extension;
+    for (int i = 0; i < fileName.length(); ++i)
+    {
+        char ch = fileName[fileName.length() - i - 1];
+        if (ch == '.' || ch == '/')
+        {
+            break;
+        } else {
+            extension += ch;
+        }
+    }
+    reverse(extension.begin(), extension.end());
+
     string path = ServerConfig::GetInstance()->GetDocumentRoot() + fileName;
 
     if (access(path.data(), R_OK) != -1)
     {
-        response.SetFilePath(path);
+        response.SetFilePath(path, extension);
         response.SetCode(200);
     } else {
         response.SetCode(404);

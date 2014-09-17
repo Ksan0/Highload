@@ -1,6 +1,6 @@
 #include "HttpResponse.h"
-#include <sstream>
-#include <iomanip>
+
+#include <string>
 #include <sys/stat.h>
 
 
@@ -12,7 +12,21 @@ map<int, const char*> __InitCodeToMsg()
     dict.insert(pair<int, const char*>(405, "Method Not Allowed"));
     return dict;
 }
-const map<int, const char*> HttpResponse::_codeToMsg = __InitCodeToMsg();
+
+
+map<string, const char*> __InitExtensionToContentType()
+{
+    map<string, const char*> dict;
+    dict.insert(pair<string, const char*>("html", "text/html; charset=UTF-8"));
+    dict.insert(pair<string, const char*>("css", "text/css; charset=UTF-8"));
+    dict.insert(pair<string, const char*>("js", "text/javascript; charset=UTF-8"));
+    dict.insert(pair<string, const char*>("jpg", "image/jpeg"));
+    dict.insert(pair<string, const char*>("jpeg", "image/jpeg"));
+    dict.insert(pair<string, const char*>("png", "image/png"));
+    dict.insert(pair<string, const char*>("gif", "image/gif"));
+    dict.insert(pair<string, const char*>("swf", "text/swf"));
+    return dict;
+}
 
 
 HttpResponse::HttpResponse()
@@ -40,8 +54,10 @@ bool HttpResponse::IsCodeDefined()
 
 const char* HttpResponse::GetCodeMsg()
 {
-    auto iter = _codeToMsg.find(_code);
-    if (iter != _codeToMsg.end())
+    static const map<int, const char*> codeToMsg = __InitCodeToMsg();
+
+    auto iter = codeToMsg.find(_code);
+    if (iter != codeToMsg.end())
     {
         return iter->second;
     }
@@ -49,11 +65,13 @@ const char* HttpResponse::GetCodeMsg()
 }
 
 
-void HttpResponse::SetFilePath(const string &path)
+void HttpResponse::SetFilePath(const string &path, const string &extension)
 {
     _filePath = path;
+    _extension = extension;
 }
 
+#include <iostream>
 void HttpResponse::WriteToBuffer(evbuffer *buf)
 {
     time_t rawTime = time(NULL);
@@ -66,6 +84,7 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     };
+    static const map<string, const char*> extensionToContentType = __InitExtensionToContentType();
 
     evbuffer_add_printf(buf,
 
@@ -81,8 +100,14 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
 
     if (GetCode() == 200)
     {
-        FILE *file = fopen(_filePath.data(), "r");
+        string contentTypeString = "text/plain";
+        auto contentTypePair = extensionToContentType.find(_extension);
+        if (contentTypePair != extensionToContentType.end())
+        {
+            contentTypeString = contentTypePair->second;
+        }
 
+        FILE *file = fopen(_filePath.data(), "r");
         if (file)
         {
             struct stat fileStat;
@@ -91,10 +116,11 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
 
             evbuffer_add_printf(buf,
 
-                                "Content-Type: text/html; charset=utf8\n"
+                                "Content-Type: %s\n"
                                 "Content-Length: %ld\n"
                                 "\n",
 
+                                contentTypeString.data(),
                                 fileStat.st_size
             );
 

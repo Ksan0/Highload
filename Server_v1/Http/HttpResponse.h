@@ -16,15 +16,14 @@ public:
     bool IsCodeDefined();
     int GetCode();
 
-    void SetFilePath(const string &path);
+    void SetFilePath(const string &path, const string &extension);
 
     void WriteToBuffer(evbuffer *buf);
 private:
-    static const map<int, const char*> _codeToMsg;
-
     const char* GetCodeMsg();
 
     string _filePath;
+    string _extension;
 
     int _code;
 };

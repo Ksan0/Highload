@@ -20,7 +20,7 @@ ServerConfig::ServerConfig()
 
 void ServerConfig::_Load()
 {
-    _documentRoot = "/home/ksan/TP/Highload/Server_v1";
+    _documentRoot = "/home/ksan/TP/Highload/Server_v1/document_root";
 }
 
 
