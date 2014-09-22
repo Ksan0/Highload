@@ -83,7 +83,7 @@ void HttpRequest::Process(HttpResponse &response)
     {
         string strRealPath = realPath;
 
-        bool insideDocRoot = strRealPath.find(ServerConfig::GetInstance()->GetDocumentRoot()) != string::npos;
+        bool insideDocRoot = strRealPath.find(ServerConfig::GetInstance()->GetDocumentRoot()) == 0;
         bool haveAccess = access(realPath, R_OK) != -1;
         if (insideDocRoot && haveAccess)
         {
