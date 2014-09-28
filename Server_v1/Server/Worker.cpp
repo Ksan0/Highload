@@ -1,6 +1,8 @@
 #include "Worker.h"
 
 #include <iostream>
+#include <fstream>
+#include <unistd.h>
 
 Worker::Worker(int id) : _id(id)
 {
@@ -12,8 +14,7 @@ Worker::~Worker()
 }
 
 
-void Worker::AddTask(TaskItem *task)
-{
+void Worker::AddTask(TaskItem *task) {
     _newTasksMutex.lock();
     _newTasks.push(new TaskItemAction(task, TaskItemAction::Action::Add));
     _newTasksMutex.unlock();
@@ -44,9 +45,8 @@ void Worker::__RemAction(bufferevent *bufEv, bool force)
             {
                 delete (*iter);
                 _tasks.erase(iter);
-            } else {
-                break;
             }
+            break;
         }
     }
 }
@@ -77,6 +77,12 @@ void Worker::UpdateTasks()
         delete taskItemAction;
     }
 
+    char chbuf[256];
+    sprintf(chbuf, "/home/ksan/logs/log_%d.log", (int)getpid());
+    ofstream log(chbuf, ios::app);
+    log << _tasks.size() << endl;
+    log.close();
+
     _newTasksMutex.unlock();
     _tasksMutex.unlock();
 }
@@ -88,6 +94,21 @@ void Worker::ExecuteTasks()
     for (auto iter = _tasks.begin(); iter != _tasks.end(); iter++)
     {
         (*iter)->Execute();
+    }
+    _tasksMutex.unlock();
+}
+
+
+void Worker::ExecuteTask(bufferevent *bufEv)
+{
+    _tasksMutex.lock();
+    for(auto iter = _tasks.begin(); iter != _tasks.end(); ++iter)
+    {
+        if ((*iter)->GetBufferEvent() == bufEv)
+        {
+            (*iter)->Execute();
+            break;
+        }
     }
     _tasksMutex.unlock();
 }

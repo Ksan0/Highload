@@ -19,6 +19,7 @@ public:
     void RemoveTask(bufferevent *bufEvTask, bool force);
     void UpdateTasks();
     void ExecuteTasks();
+    void ExecuteTask(bufferevent *bufEv);
 
     bool IsFree();
 
