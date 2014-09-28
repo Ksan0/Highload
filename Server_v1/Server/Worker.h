@@ -1,8 +1,6 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-class WorkersPool;
-
 #include "TaskItem.h"
 #include <mutex>
 #include <queue>
@@ -14,21 +12,24 @@ class TaskItem;
 class Worker
 {
 public:
+    Worker(int id);
+    ~Worker();
+
     void AddTask(TaskItem *task);
-    void RemoveTask(TaskItem *task);
+    void RemoveTask(bufferevent *bufEvTask, bool force);
     void UpdateTasks();
     void ExecuteTasks();
 
     bool IsFree();
 
-    int GetLastExecuteTime();
-
     void ExitThread();
     bool GetExitFlag();
 private:
-    Worker();
     Worker(const Worker &);
-    ~Worker();
+    void __AddAction(TaskItem *add);
+    void __RemAction(bufferevent *bufEv, bool force);
+
+    const int _id;
 
     mutex _exitWorkerThreadMutex;
     bool _exitWorkerThread = false;
@@ -44,22 +45,30 @@ private:
             Remove
         };
 
-        TaskItemAction(TaskItem *item, Action action)
+        TaskItemAction(void *item, Action action)
         {
             this->item = item;
             this->action = action;
         }
 
-        TaskItem *item;
+        void *item;
         Action action;
+
+        struct __RemoveAction
+        {
+            __RemoveAction(bufferevent *item, bool force)
+            {
+                this->item = item;
+                this->force = force;
+            };
+
+            bufferevent *item;
+            bool force;
+        };
     };
+
     mutex _newTasksMutex;
     queue<TaskItemAction*> _newTasks;
-
-    mutex _lastExecuteTimeMSMutex;
-    int _lastExecuteTimeMS = 0;
-
-    friend class WorkersPool;
 };
 
 #endif

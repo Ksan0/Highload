@@ -15,8 +15,7 @@ set(SOURCE_FILES
                     Server/ServerConfig.cpp
                     Server/TaskItem.cpp
                     Server/TaskItemExecuter.cpp
-                    Server/Worker.cpp
-                    Server/WorkersPool.cpp)
+                    Server/Worker.cpp)
 add_executable(${MY_PROJECT} ${SOURCE_FILES})
 
 # lib

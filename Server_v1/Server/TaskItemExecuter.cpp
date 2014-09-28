@@ -16,7 +16,7 @@ void TaskItemExecuter::Execute(evbuffer *readBuf, evbuffer *writeBuf, bool *fini
 
         _request.AddLine(requestLine, lineLength, _response);
 
-        delete requestLine;
+        free(requestLine);
     }
 
     if (!_response.IsCodeDefined() &&_request.IsReadyToProcess())

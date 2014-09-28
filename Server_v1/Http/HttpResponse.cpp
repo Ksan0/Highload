@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sys/stat.h>
+#include <sys/sendfile.h>
 
 
 map<int, const char*> __InitCodeToMsg()
@@ -120,16 +121,15 @@ void HttpResponse::WriteToBuffer(evbuffer *buf)
             {
                 evbuffer_add_printf(buf,
 
-                        "Content-Type: %s\r\n"
-                                "Content-Length: %ld\r\n"
-                                "\r\n",
+                                    "Content-Type: %s\r\n"
+                                    "Content-Length: %ld\r\n"
+                                    "\r\n",
 
-                        contentTypeString.data(),
-                        fileStat.st_size
+                                    contentTypeString.data(),
+                                    fileStat.st_size
                 );
 
                 if (GetMethod() != RequestMethod::Head) {
-
                     if (evbuffer_add_file(buf, fd, 0, fileStat.st_size) == -1) {
                         close(fd);
                     }

@@ -1,9 +1,8 @@
 #include "Worker.h"
 
-#include <time.h>
 #include <iostream>
 
-Worker::Worker()
+Worker::Worker(int id) : _id(id)
 {
 }
 
@@ -21,11 +20,35 @@ void Worker::AddTask(TaskItem *task)
 }
 
 
-void Worker::RemoveTask(TaskItem *task)
+void Worker::RemoveTask(bufferevent *bufEvTask, bool force)
 {
     _newTasksMutex.lock();
-    _newTasks.push(new TaskItemAction(task, TaskItemAction::Action::Remove));
+    _newTasks.push(new TaskItemAction(new TaskItemAction::__RemoveAction(bufEvTask, force), TaskItemAction::Action::Remove));
     _newTasksMutex.unlock();
+}
+
+
+void Worker::__AddAction(TaskItem *add)
+{
+    _tasks.push_back(add);
+}
+
+
+void Worker::__RemAction(bufferevent *bufEv, bool force)
+{
+    for(auto iter = _tasks.begin(); iter != _tasks.end(); ++iter)
+    {
+        if ((*iter)->GetBufferEvent() == bufEv)
+        {
+            if ((*iter)->GetFinishFlag() || force)
+            {
+                delete (*iter);
+                _tasks.erase(iter);
+            } else {
+                break;
+            }
+        }
+    }
 }
 
 
@@ -42,15 +65,12 @@ void Worker::UpdateTasks()
         switch (taskItemAction->action)
         {
         case TaskItemAction::Action::Add:
-            _tasks.push_back(taskItemAction->item);
+            __AddAction((TaskItem*)taskItemAction->item);
             break;
         case TaskItemAction::Action::Remove:
-            auto iter = find(_tasks.begin(), _tasks.end(), taskItemAction->item);
-            if (iter != _tasks.end())
-            {
-                delete (*iter);
-                _tasks.erase(iter);
-            }
+            __RemAction( ((TaskItemAction::__RemoveAction*)taskItemAction->item)->item,
+                         ((TaskItemAction::__RemoveAction*)taskItemAction->item)->force);
+            delete (TaskItemAction::__RemoveAction*)taskItemAction->item;
             break;
         }
 
@@ -64,20 +84,12 @@ void Worker::UpdateTasks()
 
 void Worker::ExecuteTasks()
 {
-    time_t tBegin = time(NULL);
-
     _tasksMutex.lock();
     for (auto iter = _tasks.begin(); iter != _tasks.end(); iter++)
     {
         (*iter)->Execute();
     }
     _tasksMutex.unlock();
-
-    double dt = difftime(time(NULL), tBegin);
-
-    _lastExecuteTimeMSMutex.lock();
-    _lastExecuteTimeMS = (int)(dt * 1000);
-    _lastExecuteTimeMSMutex.unlock();
 }
 
 
@@ -87,15 +99,6 @@ bool Worker::IsFree()
     bool empty = _tasks.empty();
     _tasksMutex.unlock();
     return empty;
-}
-
-
-int Worker::GetLastExecuteTime()
-{
-    _lastExecuteTimeMSMutex.lock();
-    int ms = _lastExecuteTimeMS;
-    _lastExecuteTimeMSMutex.unlock();
-    return ms;
 }
 
 

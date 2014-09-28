@@ -20,8 +20,8 @@ ServerConfig::ServerConfig()
 
 void ServerConfig::_Load()
 {
-    _threadsCount = 8;
-    _listenPort = 80;
+    _threadsCount = 2;
+    _listenPort = 9876;
     _documentRoot = "/home/ksan/TP/Highload/Server_v1/document_root";
 }
 

@@ -27,14 +27,17 @@ string __UrlDecode(const string &src)
 }
 
 
-static void __SplitLine(char *line, const char *delim, vector<char*> &out_args)
+static void __SplitLine(char *line, const char *delim, vector<char*> &out_args, int max_args_count)
 {
     char *context = nullptr;
     char *ptr = strtok_r(line, delim, &context);
-    while(ptr)
-    {
+    if (ptr && (max_args_count--) > 0) {
         out_args.push_back(ptr);
+    }
+    while(ptr && (max_args_count--) > 0)
+    {
         ptr = strtok_r(nullptr, delim, &context);
+        out_args.push_back(ptr);
     }
 }
 
@@ -57,7 +60,7 @@ bool HttpRequest::IsReadyToProcess()
 void HttpRequest::Process(HttpResponse &response)
 {
     string fileName = GetPage();
-    if (fileName.length() > 1 && fileName.back() == '/')
+    if (fileName.length() >= 1 && fileName.back() == '/')
     {
         fileName += "index.html";
     }
@@ -95,6 +98,32 @@ void HttpRequest::Process(HttpResponse &response)
 
         free(realPath);
     } else {
+        /*switch(errno) {
+            case EACCES:
+                cout << "EACCES" << endl;
+                break;
+            case EINVAL:
+                cout << "EINVAL" << endl;
+                break;
+            case EIO:
+                cout << "EIO" << endl;
+                break;
+            case ELOOP:
+                cout << "ELOOP" << endl;
+                break;
+            case ENAMETOOLONG:
+                cout << "ENAMETOOLONG" << endl;
+                break;
+            case ENOENT:
+                cout << "ENOENT" << endl;
+                break;
+            case ENOTDIR:
+                cout << "ENOTDIR" << endl;
+                break;
+            default:
+                cout << "DEFAULT" << endl;
+        }*/
+
         response.SetCode(404);
     }
 
@@ -133,7 +162,7 @@ void HttpRequest::HeadersEnd()
 void HttpRequest::_AddLineStartingLine(char *line, size_t len, HttpResponse &response)
 {
     vector<char*> args;
-    __SplitLine(line, " ", args);
+    __SplitLine(line, " ", args, 3);
 
     if (args.size() >= 1)
     {
@@ -175,7 +204,7 @@ void HttpRequest::_AddLineStartingLine(char *line, size_t len, HttpResponse &res
 void HttpRequest::_AddLineHeaders(char *line, size_t len, HttpResponse &response)
 {
     vector<char*> args;
-    __SplitLine(line, ": ", args);
+    __SplitLine(line, ": ", args, 2);
 
     if (args.size() == 2)
     {

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <event2/event.h>
 #include <unistd.h>
+#include <fstream>
 
 using namespace std;
 
@@ -57,15 +58,20 @@ void TaskItem::Execute()
     bufferevent_read_buffer(_bufEv, _readBuf);
     bufferevent_unlock(_bufEv);
 
+    if (evbuffer_get_length(_readBuf) <= 0)
+        return;
+
     bool finishFlag;
     _executer.Execute(_readBuf, _writeBuf, &finishFlag);
-
-    bufferevent_lock(_bufEv);
-    bufferevent_write_buffer(_bufEv, _writeBuf);
-    bufferevent_unlock(_bufEv);
-
     if (finishFlag)
     {
         _finishFlag = finishFlag;
     }
+
+    if (evbuffer_get_length(_writeBuf) <= 0)
+        return;
+
+    bufferevent_lock(_bufEv);
+    bufferevent_write_buffer(_bufEv, _writeBuf);
+    bufferevent_unlock(_bufEv);
 }
